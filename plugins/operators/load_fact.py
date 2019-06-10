@@ -16,6 +16,7 @@ class LoadFactOperator(BaseOperator):
                  *args, **kwargs):
 
         super(LoadFactOperator, self).__init__(*args, **kwargs)
+
         self.redshift_conn_id = redshift_conn_id
         self.table_name = table_name
         self.sql_load_query = sql_load_query
@@ -24,12 +25,12 @@ class LoadFactOperator(BaseOperator):
         ''' Loads data from staging tables to Fact table '''
 
         try:
-            logging.info(f"START: Loading Fact Table {self.table_name} - Started Execution")
+            logging.info(f"START: Loading Fact Table '{self.table_name}' - Started Execution")
 
             redshift_hook = PostgresHook(postgres_conn_id = self.redshift_conn_id)
             redshift_hook.run(f"INSERT INTO {self.table_name} {self.sql_load_query}")
 
-            logging.info(f"SUCCESS: Loading Fact Table {self.table_name}  - Finished Execution")
+            logging.info(f"SUCCESS: Loading Fact Table '{self.table_name}'  - Finished Execution")
 
         except Exception as ex:
-            logging.info(f"FAILED: Loading Fact Table {self.table_name} failed with error: {ex}")
+            logging.info(f"FAILED: Loading Fact Table '{self.table_name}' failed with error: {ex}")

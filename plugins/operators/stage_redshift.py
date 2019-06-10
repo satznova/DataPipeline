@@ -12,11 +12,11 @@ class StageToRedshiftOperator(BaseOperator):
 
     copy_sql = """
             COPY {}
-            FROM {}
+            FROM '{}'
             ACCESS_KEY_ID '{}'
             SECRET_ACCESS_KEY '{}'
-            JSON 'auto'
-        """
+            JSON 'auto' ;
+            """
 
     @apply_defaults
     def __init__(self,
@@ -25,13 +25,17 @@ class StageToRedshiftOperator(BaseOperator):
                 s3_bucket = '',
                 s3_key = '',
                 table_name = '',
+                table_format = 'CSV',
                 *args, **kwargs):
+
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
+
         self.aws_credentials = aws_credentials
         self.redhift_conn_id = redshift_conn_id
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
         self.table_name = table_name
+        self.table_format = table_format
 
     def execute(self, context):
         """Logic to stage data from S3 to Redshift"""
@@ -53,7 +57,8 @@ class StageToRedshiftOperator(BaseOperator):
             formatted_sql = StageToRedshiftOperator.copy_sql.format(self.table_name,
                                                                     s3_path,
                                                                     aws_credentials.access_key,
-                                                                    aws_credentials.secret_key )
+                                                                    aws_credentials.secret_key,
+                                                                    self.table_format )
             logging.info(f"INFO: Formatted COPY SQL: {formatted_sql}")
             redshift_hook.run(formatted_sql)
 
