@@ -15,7 +15,7 @@ class StageToRedshiftOperator(BaseOperator):
             FROM '{}'
             ACCESS_KEY_ID '{}'
             SECRET_ACCESS_KEY '{}'
-            JSON 'auto' ;
+            FORMAT AS {} ;
             """
 
     @apply_defaults
@@ -35,7 +35,9 @@ class StageToRedshiftOperator(BaseOperator):
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
         self.table_name = table_name
-        self.table_format = table_format
+        self.table_format = table_format.upper()
+        # fetch json path from kwargs if provided. deafult JSON path is 'auto'
+        self.json_path = kwargs.get('json_path','auto')
 
     def execute(self, context):
         """Logic to stage data from S3 to Redshift"""
@@ -51,14 +53,22 @@ class StageToRedshiftOperator(BaseOperator):
             redshift_hook.run(f"TRUNCATE TABLE {self.table_name}")
 
             logging.info(f"INFO: Copying Data from S3 to Redshift table: {self.table_name}")
+            logging.info(f"INFO: JSON PATH {self.json_path}")
+
+
             rendered_s3_key = self.s3_key.format(**context)
             s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_s3_key)
+
+            if(self.table_format == 'CSV'):
+                data_format = 'CSV'
+            else:
+                data_format = "JSON '{}'".format(self.json_path)
 
             formatted_sql = StageToRedshiftOperator.copy_sql.format(self.table_name,
                                                                     s3_path,
                                                                     aws_credentials.access_key,
                                                                     aws_credentials.secret_key,
-                                                                    self.table_format )
+                                                                    data_format)
             logging.info(f"INFO: Formatted COPY SQL: {formatted_sql}")
             redshift_hook.run(formatted_sql)
 

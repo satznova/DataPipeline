@@ -12,8 +12,8 @@ from helpers import SqlQueries
 default_args = {
     'owner': 'sathish',
     'depends_on_past': False,
-    'start_date': datetime(2018, 11, 1),
-    'end_date': datetime(2018, 11, 30),
+    'start_date': datetime(2018, 11, 29),
+    #'end_date': datetime(2019, 06, 30),
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
     'email_on_retry': False,
@@ -25,7 +25,7 @@ dag = DAG('sparkify_dwh_pipeline_dag',
 		  catchup=False,
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='0 */1 * * *'
+          schedule_interval='0 */12 * * *'
         )
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -38,9 +38,10 @@ stage_events_to_redshift = StageToRedshiftOperator(
     aws_credentials = 'aws_credentials',
     redshift_conn_id = 'aws_redshift',
     s3_bucket = Variable.get('s3_bucket'),
-    s3_key = Variable.get('s3_prefix_events'),
+    s3_key = 'log_data/{execution_date.year}/{execution_date.month}',
     table_name = 'staging_events',
-    table_format = 'JSON'
+    table_format = 'JSON',
+    json_path = 's3://udacity-dend/log_json_path.json'
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(
@@ -49,7 +50,7 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     aws_credentials = 'aws_credentials',
     redshift_conn_id = 'aws_redshift',
     s3_bucket = Variable.get('s3_bucket'),
-    s3_key = Variable.get('s3_prefix_events'),
+    s3_key = 'song-data/A/A',
     table_name = 'staging_songs',
     table_format = 'JSON'
 )

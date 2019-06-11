@@ -37,5 +37,3 @@ session.commit()
 
 # inserting variables programmatically
 Variable.set("s3_bucket", "udacity-dend")
-Variable.set("s3_prefix_events", "log_data")
-Variable.set("s3_prefix_songs", "song-data")
