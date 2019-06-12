@@ -16,16 +16,15 @@ default_args = {
     #'end_date': datetime(2019, 06, 30),
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
-    'email_on_retry': False,
-    'catchup' : True
+    'email_on_retry': False
 }
 
 # defining dag object
 dag = DAG('sparkify_dwh_pipeline_dag',
-		  catchup=False,
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='0 */12 * * *'
+          schedule_interval='0 */1 * * *',
+          catchup=False
         )
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -71,7 +70,8 @@ load_user_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id = 'aws_redshift',
     table_name = 'users',
-    sql_load_query = SqlQueries.user_table_insert
+    sql_load_query = SqlQueries.user_table_insert,
+    load_mode = 'truncate'
 )
 
 load_song_dimension_table = LoadDimensionOperator(
@@ -79,7 +79,8 @@ load_song_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id = 'aws_redshift',
     table_name = 'songs',
-    sql_load_query = SqlQueries.song_table_insert
+    sql_load_query = SqlQueries.song_table_insert,
+    load_mode = 'truncate'
 )
 
 load_artist_dimension_table = LoadDimensionOperator(
@@ -87,7 +88,8 @@ load_artist_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id = 'aws_redshift',
     table_name = 'artists',
-    sql_load_query = SqlQueries.artist_table_insert
+    sql_load_query = SqlQueries.artist_table_insert,
+    load_mode = 'truncate'
 )
 
 load_time_dimension_table = LoadDimensionOperator(
@@ -95,7 +97,8 @@ load_time_dimension_table = LoadDimensionOperator(
     dag=dag,
     redshift_conn_id = 'aws_redshift',
     table_name = 'time',
-    sql_load_query = SqlQueries.time_table_insert
+    sql_load_query = SqlQueries.time_table_insert,
+    load_mode = 'truncate'
 )
 
 run_quality_checks = DataQualityOperator(
